@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>NavDash Mobile</title>
+    <link rel="stylesheet" href="mobile.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Full-screen map canvas -->
+    <canvas id="mapCanvas"></canvas>
+
+    <!-- Top status bar (overlaid) -->
+    <header id="statusBar">
+        <div class="sb-left">
+            <img src="logo.png" alt="WAREBOT" class="logo-img">
+            <div class="conn-pill" id="connStatus">
+                <span class="conn-dot"></span>
+            </div>
+        </div>
+        <div class="sb-center">
+            <div class="nav-badge" id="navBadge">
+                <span class="badge-dot"></span>
+                <span id="navStatusText">IDLE</span>
+            </div>
+        </div>
+        <div class="sb-right">
+            <button class="icon-btn" id="btnMenu" aria-label="Menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Floating tool dock (bottom) -->
+    <nav id="toolDock">
+        <button class="dock-btn active" id="btnPan" data-tool="pan" aria-label="Pan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-4 0v1M14 10V4a2 2 0 00-4 0v6M10 10V6a2 2 0 00-4 0v8l-1.8-1.8a2 2 0 00-2.83 2.83L8 22h10a2 2 0 002-2v-6.17a2 2 0 00-.59-1.42L18 11z"/></svg>
+            <span>Pan</span>
+        </button>
+        <button class="dock-btn" id="btnPose" data-tool="initial_pose" aria-label="Set Pose">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
+            <span>Pose</span>
+        </button>
+        <button class="dock-btn center-action" id="btnCancel" aria-label="Cancel Nav">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6m0-6l6 6"/></svg>
+        </button>
+        <button class="dock-btn" id="btnGoal" data-tool="nav_goal" aria-label="Set Goal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/></svg>
+            <span>Goal</span>
+        </button>
+        <button class="dock-btn" id="btnLayers" aria-label="Layers">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span>Layers</span>
+        </button>
+    </nav>
+
+    <!-- Coordinate / zoom overlay -->
+    <div id="coordOverlay">
+        <span id="coordText">x: --, y: --</span>
+        <span class="sep">|</span>
+        <span id="zoomText">100%</span>
+    </div>
+
+    <!-- Placement hint banner -->
+    <div id="placeHint" class="hidden">
+        <span id="placeHintText">Tap on map, then drag to set orientation</span>
+    </div>
+
+    <!-- Stats drawer (slide up) -->
+    <div id="statsDrawer" class="drawer hidden">
+        <div class="drawer-handle" id="drawerHandle"><span></span></div>
+        <div class="drawer-body">
+            <div class="drawer-section">
+                <h3>Robot</h3>
+                <div class="stat-row">
+                    <div class="stat"><span class="sl">X</span><span class="sv" id="statX">--</span></div>
+                    <div class="stat"><span class="sl">Y</span><span class="sv" id="statY">--</span></div>
+                    <div class="stat"><span class="sl">Heading</span><span class="sv" id="statYaw">--</span></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat"><span class="sl">Speed</span><span class="sv" id="statLinVel">--</span></div>
+                    <div class="stat"><span class="sl">Turn</span><span class="sv" id="statAngVel">--</span></div>
+                    <div class="stat"><span class="sl">Battery</span><span class="sv" id="statBattery">--</span></div>
+                </div>
+            </div>
+            <div class="drawer-section">
+                <h3>Map</h3>
+                <div class="stat-row">
+                    <div class="stat"><span class="sl">Size</span><span class="sv" id="statMapSize">--</span></div>
+                    <div class="stat"><span class="sl">Res</span><span class="sv" id="statMapRes">--</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layers sheet (slide up) -->
+    <div id="layersSheet" class="sheet hidden">
+        <div class="sheet-backdrop" id="layersBackdrop"></div>
+        <div class="sheet-content">
+            <div class="sheet-handle"><span></span></div>
+            <h3>Layers</h3>
+            <label class="layer-row"><input type="checkbox" id="layerMap" checked><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Occupancy Map</span></label>
+            <label class="layer-row"><input type="checkbox" id="layerCostmap"><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Costmap</span></label>
+            <label class="layer-row"><input type="checkbox" id="layerScan" checked><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Lidar Scan</span></label>
+            <label class="layer-row"><input type="checkbox" id="layerRobot" checked><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Robot Pose</span></label>
+            <label class="layer-row"><input type="checkbox" id="layerPath" checked><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Global Path</span></label>
+            <label class="layer-row"><input type="checkbox" id="layerLocalPath" checked><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Local Path</span></label>
+            <div class="sheet-spacer"></div>
+            <label class="layer-row"><input type="checkbox" id="followRobot"><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Follow Robot</span></label>
+        </div>
+    </div>
+
+    <script src="mobile.js"></script>
+</body>
+</html>

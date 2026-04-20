@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nav Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top bar -->
+    <header id="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <img src="logo.png" alt="WAREBOT" class="logo-img">
+            </div>
+            <div class="connection-status" id="connStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+        </div>
+        <div class="topbar-center">
+            <div class="tool-group">
+                <button class="tool-btn" id="btnPan" data-tool="pan" title="Pan (P)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-4 0v1M14 10V4a2 2 0 00-4 0v6M10 10V6a2 2 0 00-4 0v8l-1.8-1.8a2 2 0 00-2.83 2.83L8 22h10a2 2 0 002-2v-6.17a2 2 0 00-.59-1.42L18 11z"/></svg>
+                </button>
+                <button class="tool-btn active" id="btnPose" data-tool="initial_pose" title="Set Initial Pose (I)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
+                    <span>Pose</span>
+                </button>
+                <button class="tool-btn" id="btnGoal" data-tool="nav_goal" title="Set Nav Goal (G)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3L3 10.5l7 2.5 2.5 7z"/></svg>
+                    <span>Goal</span>
+                </button>
+                <div class="tool-separator"></div>
+                <button class="tool-btn danger" id="btnCancel" title="Cancel Navigation (Esc)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6m0-6l6 6"/></svg>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="nav-status-badge" id="navStatusBadge">
+                <span class="badge-dot"></span>
+                <span id="navStatusText">IDLE</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <div id="main">
+        <!-- Left sidebar: Robot Info -->
+        <aside id="sidebar">
+            <div class="panel">
+                <div class="panel-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/></svg>
+                    Robot Status
+                </div>
+                <div class="panel-body">
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Position X</span>
+                            <span class="stat-value" id="statX">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Position Y</span>
+                            <span class="stat-value" id="statY">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Heading</span>
+                            <span class="stat-value" id="statYaw">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Linear Vel</span>
+                            <span class="stat-value" id="statLinVel">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Angular Vel</span>
+                            <span class="stat-value" id="statAngVel">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Battery</span>
+                            <span class="stat-value" id="statBattery">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10m0 0l-3 3m3-3l3 3M4 4h16"/></svg>
+                    Map Info
+                </div>
+                <div class="panel-body">
+                    <div class="stat-grid compact">
+                        <div class="stat-item">
+                            <span class="stat-label">Size</span>
+                            <span class="stat-value" id="statMapSize">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Resolution</span>
+                            <span class="stat-value" id="statMapRes">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+                    Layers
+                </div>
+                <div class="panel-body">
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerMap" checked>
+                        <span class="toggle-slider"></span>
+                        <span>Occupancy Map</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerCostmap">
+                        <span class="toggle-slider"></span>
+                        <span>Costmap</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerScan" checked>
+                        <span class="toggle-slider"></span>
+                        <span>Lidar Scan</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerRobot" checked>
+                        <span class="toggle-slider"></span>
+                        <span>Robot Pose</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerPath" checked>
+                        <span class="toggle-slider"></span>
+                        <span>Global Path</span>
+                    </label>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="layerLocalPath" checked>
+                        <span class="toggle-slider"></span>
+                        <span>Local Path</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    View
+                </div>
+                <div class="panel-body">
+                    <button class="btn-small" id="btnFitMap">Fit Map</button>
+                    <button class="btn-small" id="btnCenterRobot">Center Robot</button>
+                    <label class="layer-toggle">
+                        <input type="checkbox" id="followRobot">
+                        <span class="toggle-slider"></span>
+                        <span>Follow Robot</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map canvas area -->
+        <div id="canvas-container">
+            <canvas id="mapCanvas"></canvas>
+            <!-- Coordinate display -->
+            <div id="coordDisplay">
+                <span id="coordText">x: --, y: --</span>
+            </div>
+            <!-- Zoom display -->
+            <div id="zoomDisplay">
+                <span id="zoomText">100%</span>
+            </div>
+            <!-- Arrow overlay for pose/goal setting -->
+            <div id="arrowHint" class="hidden">
+                <span>Click on map, then drag to set orientation</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
